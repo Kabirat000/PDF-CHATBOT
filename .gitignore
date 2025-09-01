@@ -1,0 +1,14 @@
+# Ignore Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Ignore virtual environment
+venv/
+.env
+
+# Ignore Chroma DB
+chroma_store/
+.streamlit/
+
+# Ignore other unwanted files
+*.pdf
