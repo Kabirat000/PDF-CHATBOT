@@ -62,7 +62,8 @@ if uploaded_file is not None:
     client = QdrantClient(path=persist_dir)
 
     # Define vector parameters for the collection, including the distance metric.
-    vectors_config = VectorParams(size=embedding_model.vector_size, distance=Distance.COSINE)
+    # The `all-MiniLM-L6-v2` model has a fixed vector size of 384.
+    vectors_config = VectorParams(size=384, distance=Distance.COSINE)
     collection_name = "pdf_documents"
 
     # Create the vector store from documents using the Qdrant client.
