@@ -103,4 +103,7 @@ poetry.lock
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# miscellaneous
+.streamlit/secrets.toml.example
 README.md
