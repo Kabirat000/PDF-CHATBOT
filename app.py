@@ -2,6 +2,7 @@ import os
 import uuid
 import streamlit as st
 from dotenv import load_dotenv
+from pydantic import SecretStr
 
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -14,8 +15,12 @@ from langchain.memory import ConversationBufferMemory
 # -------------------------------------------------
 # Load environment variables
 # -------------------------------------------------
-load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY")
+# Prioritize Streamlit secrets over environment variables
+try:
+    groq_api_key = st.secrets["GROQ_API_KEY"]
+except (KeyError, FileNotFoundError):
+    load_dotenv()
+    groq_api_key = os.getenv("GROQ_API_KEY")
 
 # -------------------------------------------------
 # Streamlit App UI
@@ -57,7 +62,7 @@ if uploaded_file is not None:
     # LLM
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
-        api_key=groq_api_key
+        api_key=SecretStr(groq_api_key) if groq_api_key else None
     )
 
     # Memory
