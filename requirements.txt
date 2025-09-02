@@ -5,7 +5,8 @@ langchain-text-splitters
 langchain-huggingface
 langchain-groq
 langchain
-chromadb
+langchain-qdrant
+qdrant-client
 sentence-transformers
 PyMuPDF
 pydantic

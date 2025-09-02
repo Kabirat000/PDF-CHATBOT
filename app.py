@@ -6,11 +6,15 @@ from pydantic import SecretStr
 
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
+
+# Qdrant-specific imports
+from langchain_community.vectorstores import Qdrant
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Distance, VectorParams
 
 # -------------------------------------------------
 # Load environment variables
@@ -44,19 +48,32 @@ if uploaded_file is not None:
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     documents = splitter.split_documents(docs)
 
-    # Create a unique Chroma directory for each upload
-    persist_dir = f"./chroma_store/{uuid.uuid4().hex}"
-
+    # Note: The embedding model remains the same.
     embedding_model = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2",
         model_kwargs={'device': 'cpu'}
     )
 
-    db = Chroma.from_documents(
+    # Initialize a Qdrant local client
+    # Create a unique directory for each vector store
+    persist_dir = f"./qdrant_store/{uuid.uuid4().hex}"
+    # Ensure the directory exists
+    os.makedirs(persist_dir, exist_ok=True)
+    client = QdrantClient(path=persist_dir)
+
+    # Define vector parameters for the collection, including the distance metric.
+    vectors_config = VectorParams(size=embedding_model.vector_size, distance=Distance.COSINE)
+    collection_name = "pdf_documents"
+
+    # Create the vector store from documents using the Qdrant client.
+    db = Qdrant.from_documents(
         documents,
         embedding_model,
-        persist_directory=persist_dir
+        client=client,
+        collection_name=collection_name,
+        vectors_config=vectors_config
     )
+
     retriever = db.as_retriever(search_kwargs={"k": 8})
 
     # LLM
@@ -69,7 +86,7 @@ if uploaded_file is not None:
     memory = ConversationBufferMemory(
         memory_key="chat_history",
         return_messages=True,
-        output_key="answer"   # 👈 FIX applied here
+        output_key="answer"
     )
 
     # Conversational Retrieval Chain
@@ -78,7 +95,7 @@ if uploaded_file is not None:
         retriever=retriever,
         memory=memory,
         return_source_documents=True,
-        output_key="answer"   # 👈 FIX applied here too
+        output_key="answer"
     )
 
     # -------------------------------------------------
