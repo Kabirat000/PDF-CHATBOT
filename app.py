@@ -13,7 +13,6 @@ from langchain.memory import ConversationBufferMemory
 
 # Qdrant-specific imports
 from langchain_community.vectorstores import Qdrant
-from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 
 # -------------------------------------------------
@@ -57,20 +56,17 @@ if uploaded_file is not None:
     # Initialize a Qdrant local client
     # Create a unique directory for each vector store
     persist_dir = f"./qdrant_store/{uuid.uuid4().hex}"
-    # Ensure the directory exists
     os.makedirs(persist_dir, exist_ok=True)
-    client = QdrantClient(path=persist_dir)
 
-    # Define vector parameters for the collection, including the distance metric.
-    # The `all-MiniLM-L6-v2` model has a fixed vector size of 384.
+    # Define vector parameters for the collection
     vectors_config = VectorParams(size=384, distance=Distance.COSINE)
     collection_name = "pdf_documents"
 
-    # Create the vector store from documents using the Qdrant client.
+    # ✅ FIXED: use `path=persist_dir` instead of client
     db = Qdrant.from_documents(
         documents,
         embedding_model,
-        client=client,
+        path=persist_dir,
         collection_name=collection_name,
         vectors_config=vectors_config
     )
