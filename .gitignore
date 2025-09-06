@@ -107,3 +107,6 @@ Thumbs.db
 # miscellaneous
 .streamlit/secrets.toml.example
 README.md
+glucose.md
+qdrant_store/
+model_cache/
